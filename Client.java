@@ -22,6 +22,8 @@ public class Client implements Runnable {
         Scanner scanner = new Scanner(System.in);
         System.out.println("[CLIENT] : Enter the IP adress of the server");
         IP_ADRESS = scanner.nextLine();
+        System.out.println("[CLIENT] : Enter the port of the server");
+        PORT = scanner.nextInt();
 
         // Setup connection
         try {
