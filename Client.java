@@ -34,24 +34,20 @@ public class Client implements Runnable {
         }
         // Receive messages
 
-        Thread receiveThread = new Thread(() -> {
-            try { // TODO THIS THREAD IS NOT CHECKING WHETHER THE SOCKET HAS CLOSED OR NOT WHEN
-                  // EXITING.
-                String incoming;
-                while ((incoming = IN.readLine()) != null) {
-                    System.out.println(incoming);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        receiveThread.start();
+        MessageReceiver receive = new MessageReceiver();
+        receive.start();
 
         // Send messages
         String message;
         while ((message = scanner.nextLine()) != null) {
             OUT.println(message);
             if (message.equals("/exit")) {
+                receive.stopThread();
+                try {
+                    receive.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 break;
             }
             System.out.println("[CLIENT] [SENT] : " + message);
@@ -65,8 +61,29 @@ public class Client implements Runnable {
             if (!SOCKET.isClosed()) {
                 SOCKET.close();
             }
+            IN.close();
+            OUT.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    class MessageReceiver extends Thread {
+        private volatile boolean running = true;
+
+        public void run() {
+            try {
+                String incoming;
+                while (running && (incoming = IN.readLine()) != null) {
+                    System.out.println(incoming);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void stopThread() {
+            running = false;
         }
     }
 }
