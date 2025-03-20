@@ -17,6 +17,9 @@ public class Server implements Runnable {
         this.PORT = PORT;
     }
 
+
+
+    //Main Fonksiyonu
     public static void main(String[] args) {
         Server server = new Server(30000);
         server.run();
