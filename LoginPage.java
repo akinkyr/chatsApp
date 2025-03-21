@@ -68,7 +68,9 @@ public class LoginPage implements ActionListener {
                 messageLabel.setText("Login successful");
                 messageLabel.setForeground(Color.GREEN);
                 frame.dispose();
-                new WelcomePage(userID);
+                Client client = new Client();
+                client.run();
+
             } else {
                 messageLabel.setText("Login failed");
                 messageLabel.setForeground(Color.RED);

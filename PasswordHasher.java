@@ -8,7 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 public class PasswordHasher {
-    // This method is essentially the same as in your IDandPasswords class.
+
     public static String hashPassword(String password) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");

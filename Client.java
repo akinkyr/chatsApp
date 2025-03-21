@@ -13,6 +13,7 @@ public class Client implements Runnable {
     private BufferedReader IN;
 
     public static void main(String[] args) {
+
         Client client = new Client();
         client.run();
     }
