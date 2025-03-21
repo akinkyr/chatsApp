@@ -2,43 +2,39 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
 
 public class LoginPage implements ActionListener {
-
-    //Stuff we need to instantiate before program launches
-    JFrame frame =new JFrame();
+    JFrame frame = new JFrame();
     JButton loginbtn = new JButton("Login");
-    JButton resetbtn = new JButton("Reset");
+    JButton registerbtn = new JButton("Register");
     JTextField userIDField = new JTextField();
     JPasswordField userPasswordField = new JPasswordField();
     JLabel userIDLabel = new JLabel("User ID");
     JLabel userPasswordLabel = new JLabel("Password");
     JLabel messageLabel = new JLabel();
-    HashMap <String,String> logininfo = new HashMap<String,String>();
 
 
-    LoginPage(HashMap<String,String> loginInfoOriginal){
-        logininfo = loginInfoOriginal;
+    private IDandPasswords idPass;
 
-        //x,y,width,height
-        userIDLabel.setBounds(50,100,75,25);
-        userPasswordLabel.setBounds(50,150,75,25);
+    public LoginPage(IDandPasswords idPass){
+        this.idPass = idPass;
 
-        messageLabel.setBounds(125,250,250,35);
-        messageLabel.setFont(new Font(null,Font.ITALIC,25));
+        // Set component bounds
+        userIDLabel.setBounds(50, 100, 75, 25);
+        userPasswordLabel.setBounds(50, 150, 75, 25);
+        messageLabel.setBounds(125, 250, 250, 35);
+        messageLabel.setFont(new Font(null, Font.ITALIC, 25));
+        userIDField.setBounds(125, 100, 200, 25);
+        userPasswordField.setBounds(125, 150, 200, 25);
 
-
-        userIDField.setBounds(125,100,200,25);
-        userPasswordField.setBounds(125,150,200,25);
-
-        loginbtn.setBounds(125,200,100,25);
-        loginbtn.setFocusable(false); //removes the weird box tingy when clciked on the button
+        loginbtn.setBounds(125, 200, 100, 25);
+        loginbtn.setFocusable(false);
         loginbtn.addActionListener(this);
 
-        resetbtn.setBounds(225,200,100,25);
-        resetbtn.setFocusable(false); //removes the weird box tingy when clciked on the button
-        resetbtn.addActionListener(this);
+        registerbtn.setBounds(225, 200, 100, 25);
+        registerbtn.setFocusable(false);
+        registerbtn.addActionListener(this);
+
 
         frame.add(userIDLabel);
         frame.add(userPasswordLabel);
@@ -46,49 +42,37 @@ public class LoginPage implements ActionListener {
         frame.add(userIDField);
         frame.add(userPasswordField);
         frame.add(loginbtn);
-        frame.add(resetbtn);
+        frame.add(registerbtn);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(420,420);
+        frame.setSize(420, 420);
         frame.setLayout(null);
         frame.setVisible(true);
-
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        //if reset button pressed, clears the boxces this will be changed to reset my password later on
-        if(e.getSource()==resetbtn){
-            userIDField.setText("");
-            userPasswordField.setText("");
-        }
-        if(e.getSource()==loginbtn){
-
-            String userID = userIDField.getText();
-            //Unlike jlabels we have to use valueof cuz it is not a jlabel! (yarim saat bunla ugrastim)
+        if(e.getSource() == registerbtn){
+            String userName = userIDField.getText();
             String password = String.valueOf(userPasswordField.getPassword());
 
-            if(logininfo.containsKey(userID)){
-                if(logininfo.get(userID).equals(password)){
-                    messageLabel.setText("Login successful");
-                    messageLabel.setForeground(Color.GREEN);
-                    frame.dispose();
-                    WelcomePage welcomePage = new WelcomePage(userID);
-
-                }
-
-                else {
-                    messageLabel.setText("Wrong password");
-                    messageLabel.setForeground(Color.RED);
-                }
-            }
-            else {
-                messageLabel.setText("Username not found!");
-                messageLabel.setForeground(Color.RED);
-            }
-            //ll
+            PasswordHasher.writeCredentials(userName, password);
+            messageLabel.setText("Saved succesfully");
 
         }
+        if(e.getSource() == loginbtn){
+            String userID = userIDField.getText();
+            String password = String.valueOf(userPasswordField.getPassword());
 
+
+            if(idPass.authenticate(userID, password)){
+                messageLabel.setText("Login successful");
+                messageLabel.setForeground(Color.GREEN);
+                frame.dispose();
+                new WelcomePage(userID);
+            } else {
+                messageLabel.setText("Login failed");
+                messageLabel.setForeground(Color.RED);
+            }
+        }
     }
 }
