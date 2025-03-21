@@ -1,4 +1,4 @@
-package security;
+package com.chatsApp.security;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
