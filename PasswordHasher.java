@@ -1,7 +1,9 @@
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -31,14 +33,28 @@ public class PasswordHasher {
 
     public static void writeCredentials(String userID, String plainPassword) {
         Properties props = new Properties();
+        Path path = Paths.get("login.properties");
+
+        if (Files.exists(path)) {
+            try (InputStream in = Files.newInputStream(path)) {
+                props.load(in);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         String hashedPassword = hashPassword(plainPassword);
         props.setProperty(userID, hashedPassword);
-        try (OutputStream out = Files.newOutputStream(Paths.get("login.properties"))) {
+
+        try (OutputStream out = Files.newOutputStream(path)) {
             props.store(out, "Login credentials");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
+
 
 
 

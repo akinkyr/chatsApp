@@ -10,6 +10,12 @@ public class IDandPasswords {
 
     public IDandPasswords() {
         loadCredentials();
+        reloadCredentials();
+
+    }
+    public void reloadCredentials() {
+        logininfo.clear();
+        loadCredentials();
     }
 
     private void loadCredentials() {
@@ -39,3 +45,5 @@ public class IDandPasswords {
         return logininfo;
     }
 }
+
+
