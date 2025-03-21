@@ -56,6 +56,7 @@ public class LoginPage implements ActionListener {
             String password = String.valueOf(userPasswordField.getPassword());
 
             PasswordHasher.writeCredentials(userName, password);
+            idPass.reloadCredentials();
             messageLabel.setText("Saved succesfully");
 
         }
