@@ -52,13 +52,17 @@ public class LoginPage implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == registerbtn){
-            String userName = userIDField.getText();
-            String password = String.valueOf(userPasswordField.getPassword());
+            if(idPass.authenticate(userIDField.getText())){
+                String userName = userIDField.getText();
+                String password = String.valueOf(userPasswordField.getPassword());
 
-            PasswordHasher.writeCredentials(userName, password);
-            idPass.reloadCredentials();
-            messageLabel.setText("Saved succesfully");
-
+                PasswordHasher.writeCredentials(userName, password);
+                idPass.reloadCredentials();
+                messageLabel.setText("Saved succesfully");
+            }
+            else{
+                messageLabel.setText("This username already exists");
+            }
         }
         if(e.getSource() == loginbtn){
             String userID = userIDField.getText();

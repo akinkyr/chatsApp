@@ -39,6 +39,16 @@ public class IDandPasswords {
         return hashedInput != null && hashedInput.equals(storedHash);
     }
 
+    public boolean authenticate(String username) {
+        if (logininfo.containsKey(username)) {
+            return false;
+        }
+        else
+            return true;
+    }
+
+
+
 
 
     protected HashMap<String, String> getLogininfo() {
