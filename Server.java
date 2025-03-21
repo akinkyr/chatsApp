@@ -3,18 +3,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyAgreement;
-import javax.crypto.spec.SecretKeySpec;
+import security.Encryption;
 
 public class Server implements Runnable {
 
@@ -78,7 +70,7 @@ public class Server implements Runnable {
         private String USERNAME;
         private ObjectOutputStream OUT;
         private ObjectInputStream IN;
-        private SecretKeySpec secretKey;
+        private Encryption ENCRYPTION;
 
         public ClientHandler(Socket CLIENT) {
             this.CLIENT = CLIENT;
@@ -92,41 +84,22 @@ public class Server implements Runnable {
 
                 // HANDSHAKE
 
-                try {
-                    KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
-                    keyPairGenerator.initialize(256);
-                    KeyPair serverKeyPair = keyPairGenerator.generateKeyPair();
-                    PublicKey serverPublicKey = serverKeyPair.getPublic();
-                    PrivateKey serverPrivateKey = serverKeyPair.getPrivate();
+                ENCRYPTION = new Encryption(256)
+                        .generateKeys()
+                        .sendPublicKey(OUT)
+                        .getPeerPublicKey(IN)
+                        .getSharedSecret();
 
-                    OUT.writeObject(serverPublicKey);
-                    OUT.flush();
-
-                    PublicKey clientPublicKey = (PublicKey) IN.readObject();
-
-                    KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
-                    keyAgreement.init(serverPrivateKey);
-                    keyAgreement.doPhase(clientPublicKey, true);
-                    byte[] sharedSecret = keyAgreement.generateSecret();
-                    secretKey = new SecretKeySpec(sharedSecret, 0, 32, "AES");
-                } catch (NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (InvalidKeyException e) {
-                    e.printStackTrace();
-                }
-
-                sendMessage("--- ENCRYPTION: ECDH(P-256) + AES-256 ---");
+                sendMessage("--- ENCRYPTION: ECDH(X25519) + AES-GCM ---");
                 sendMessage("[SERVER] : Please enter your username.");
-                USERNAME = decryptMessage((byte[]) IN.readObject(), secretKey);
+                USERNAME = new String(ENCRYPTION.decrypt((byte[]) IN.readObject()));
 
                 sendMessage("[SERVER] : You are connected to chat.");
                 broadcast("[SERVER] : " + USERNAME + " has connected to chat.", this);
                 System.out.println("User '" + USERNAME + "' has connected to chat.");
 
                 String message;
-                while ((message = decryptMessage((byte[]) IN.readObject(), secretKey)) != null) {
+                while ((message = new String(ENCRYPTION.decrypt((byte[]) IN.readObject()))) != null) {
                     if (message.equals("/exit")) {
                         broadcast("[SERVER] : " + USERNAME + " has left.", this);
                         System.out.println("User '" + USERNAME + "' has left.");
@@ -137,39 +110,19 @@ public class Server implements Runnable {
                     System.out.println(message);
                     broadcast(message, this);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                endConnection();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
+                endConnection();
             }
         }
 
         public void sendMessage(String message) {
             try {
-                byte[] encryptedMessage = encryptMessage(message, secretKey);
-                OUT.writeObject(encryptedMessage);
+                OUT.writeObject(ENCRYPTION.encrypt(message.getBytes()));
                 OUT.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-
-        public byte[] encryptMessage(String message, SecretKeySpec secretKey) throws Exception {
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-            return cipher.doFinal(message.getBytes());
-        }
-
-        public String decryptMessage(byte[] encryptedMessage, SecretKeySpec secretKey) throws Exception {
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decryptedBytes = cipher.doFinal(encryptedMessage);
-            return new String(decryptedBytes);
         }
 
         public void endConnection() {
