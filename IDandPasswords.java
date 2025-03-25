@@ -1,5 +1,9 @@
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -19,16 +23,18 @@ public class IDandPasswords {
     }
 
     private void loadCredentials() {
-        Properties props = new Properties();
-        try (FileInputStream fis = new FileInputStream("login.properties")) {
-            props.load(fis);
-            for (String key : props.stringPropertyNames()) {
-                logininfo.put(key, props.getProperty(key));
+        Path path = Paths.get("login.ser");
+        if (Files.exists(path)) {
+            try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(path))) {
+                logininfo = (HashMap<String, String>) in.readObject();
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            logininfo = new HashMap<>(); // Initialize if the file doesn't exist
         }
     }
+
 
     public boolean authenticate(String username, String password) {
         if (!logininfo.containsKey(username)) {

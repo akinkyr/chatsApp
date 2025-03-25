@@ -1,12 +1,11 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Properties;
 
 public class PasswordHasher {
@@ -31,34 +30,31 @@ public class PasswordHasher {
     }
 
 
-    public static void writeCredentials(String userID, String plainPassword) {
-        Properties props = new Properties();
-        Path path = Paths.get("login.properties");
+    private static final Path PATH = Paths.get("login.ser");
 
-        if (Files.exists(path)) {
-            try (InputStream in = Files.newInputStream(path)) {
-                props.load(in);
-            } catch (IOException e) {
+    public static void writeCredentials(String userID, String plainPassword) {
+        HashMap<String, String> credentials = new HashMap<>();
+
+        // Load existing credentials if the file exists
+        if (Files.exists(PATH)) {
+            try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(PATH))) {
+                credentials = (HashMap<String, String>) in.readObject();
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
 
+        // Hash and store the new credential
         String hashedPassword = hashPassword(plainPassword);
-        props.setProperty(userID, hashedPassword);
+        credentials.put(userID, hashedPassword);
 
-        try (OutputStream out = Files.newOutputStream(path)) {
-            props.store(out, "Login credentials");
+        // Save the updated credentials
+        try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(PATH))) {
+            out.writeObject(credentials);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
-
-
-
-
-
 
     public static void main(String[] args) {
 
