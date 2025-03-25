@@ -35,7 +35,6 @@ public class PasswordHasher {
     public static void writeCredentials(String userID, String plainPassword) {
         HashMap<String, String> credentials = new HashMap<>();
 
-        // Load existing credentials if the file exists
         if (Files.exists(PATH)) {
             try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(PATH))) {
                 credentials = (HashMap<String, String>) in.readObject();
@@ -44,11 +43,9 @@ public class PasswordHasher {
             }
         }
 
-        // Hash and store the new credential
         String hashedPassword = hashPassword(plainPassword);
         credentials.put(userID, hashedPassword);
 
-        // Save the updated credentials
         try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(PATH))) {
             out.writeObject(credentials);
         } catch (IOException e) {
@@ -56,7 +53,4 @@ public class PasswordHasher {
         }
     }
 
-    public static void main(String[] args) {
-
-    }
 }

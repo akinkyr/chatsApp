@@ -1,18 +1,14 @@
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Properties;
 
-public class IDandPasswords {
+public class AuthenticateUser {
     private HashMap<String, String> logininfo = new HashMap<>();
 
-    public IDandPasswords() {
+    public AuthenticateUser() {
         loadCredentials();
         reloadCredentials();
 
@@ -31,7 +27,7 @@ public class IDandPasswords {
                 e.printStackTrace();
             }
         } else {
-            logininfo = new HashMap<>(); // Initialize if the file doesn't exist
+            logininfo = new HashMap<>();
         }
     }
 
@@ -52,10 +48,6 @@ public class IDandPasswords {
         else
             return true;
     }
-
-
-
-
 
     protected HashMap<String, String> getLogininfo() {
         return logininfo;

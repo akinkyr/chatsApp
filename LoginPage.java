@@ -14,16 +14,16 @@ public class LoginPage implements ActionListener {
     JLabel messageLabel = new JLabel();
 
 
-    private IDandPasswords idPass;
+    private AuthenticateUser idPass;
 
-    public LoginPage(IDandPasswords idPass){
+    public LoginPage(AuthenticateUser idPass){
         this.idPass = idPass;
 
         // Set component bounds
         userIDLabel.setBounds(50, 100, 75, 25);
         userPasswordLabel.setBounds(50, 150, 75, 25);
         messageLabel.setBounds(125, 250, 250, 35);
-        messageLabel.setFont(new Font(null, Font.ITALIC, 25));
+        messageLabel.setFont(new Font(null, Font.ITALIC, 10));
         userIDField.setBounds(125, 100, 200, 25);
         userPasswordField.setBounds(125, 150, 200, 25);
 

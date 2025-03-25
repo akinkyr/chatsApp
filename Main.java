@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        IDandPasswords idandpasswords = new IDandPasswords();
+        AuthenticateUser idandpasswords = new AuthenticateUser();
 
         LoginPage loginpage = new LoginPage(idandpasswords);
 
