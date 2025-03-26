@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+
 public class LoginPage implements ActionListener {
     JFrame frame = new JFrame();
     JButton loginbtn = new JButton("Login");
@@ -17,6 +18,7 @@ public class LoginPage implements ActionListener {
     private AuthenticateUser idPass;
 
     public LoginPage(AuthenticateUser idPass){
+
         this.idPass = idPass;
 
         // Set component bounds

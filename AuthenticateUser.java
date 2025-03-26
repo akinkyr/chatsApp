@@ -18,7 +18,7 @@ public class AuthenticateUser {
         loadCredentials();
     }
 
-    private void loadCredentials() {
+    public void loadCredentials() {
         Path path = Paths.get("login.ser");
         if (Files.exists(path)) {
             try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(path))) {
