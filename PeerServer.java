@@ -5,8 +5,8 @@ import java.net.Socket;
 import java.util.HashSet;
 
 public class PeerServer implements Runnable {
-    ServerSocket SERVER_SOCKET;
-    HashSet<ClientHandler> CLIENTS = new HashSet<>();
+    private ServerSocket SERVER_SOCKET;
+    private HashSet<ClientHandler> CLIENTS = new HashSet<>();
 
     public PeerServer(int port) {
         try {
@@ -25,7 +25,7 @@ public class PeerServer implements Runnable {
                 System.out.println("[-] Accepted new user : " + client.getInetAddress());
                 ClientHandler clientHandler = new ClientHandler(client);
                 CLIENTS.add(clientHandler);
-                clientHandler.run();
+                new Thread(clientHandler).start();
             }
         } catch (Exception e) {
             e.printStackTrace();

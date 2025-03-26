@@ -1,6 +1,7 @@
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Client {
@@ -38,23 +39,28 @@ public class Client {
 
         Scanner scanner = new Scanner(System.in);
 
-        try (DatagramSocket socket = new DatagramSocket(PORT)) {
+        if (PORT == 0) {
+            Random random = new Random();
+            PORT = random.nextInt(50000, 60000);
+        }
 
-            PORT = socket.getLocalPort();
-
-            byte[] buffer = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        try {
 
             System.out.println("Choose an option\n- 'Host'\n- 'Connect'");
             String choice = scanner.nextLine();
 
             String peerId;
 
+            Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+
             if (choice.equalsIgnoreCase("host")) {
                 System.out.println("Enter your ID.");
                 String id = scanner.nextLine();
 
-                sendSignal(socket, "REG " + id);
+                sendSignal("REG " + id + " " + socket.getInetAddress().toString().substring(1) + " " + PORT, out);
 
                 PeerServer peerServer = new PeerServer(PORT);
                 peerServer.run();
@@ -63,10 +69,9 @@ public class Client {
                 System.out.println("Enter ID of the peer to establish connection.");
                 peerId = new String(scanner.nextLine());
 
-                sendSignal(socket, "REQ " + peerId);
+                sendSignal("REQ " + peerId, out);
 
-                socket.receive(packet);
-                String response = new String(packet.getData(), 0, packet.getLength());
+                String response = (String) in.readObject();
                 if (response.startsWith("ANS")) {
                     String[] info = response.split(" ");
                     String peerIp = info[1];
@@ -83,6 +88,7 @@ public class Client {
                 System.out.println("[!] Invalid option specified.");
                 System.exit(1);
             }
+            socket.close();
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -90,9 +96,8 @@ public class Client {
         scanner.close();
     }
 
-    public static void sendSignal(DatagramSocket socket, String msg) throws Exception {
-        byte[] data = msg.getBytes();
-        DatagramPacket packet = new DatagramPacket(data, data.length, InetAddress.getByName(SERVER_IP), SERVER_PORT);
-        socket.send(packet);
+    public static void sendSignal(String msg, ObjectOutputStream out) throws Exception {
+        out.writeObject(msg);
+        out.flush();
     }
 }

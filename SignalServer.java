@@ -1,16 +1,16 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SignalServer implements Runnable {
 
-    public static ObjectInputStream IN;
-    public static ObjectOutputStream OUT;
-    public static int PORT = -1;
-    public static int MAX_CLIENTS = 5;
+    private static int PORT = -1;
+    private static int MAX_CLIENTS = 5;
+    private ConcurrentHashMap<String, String> CLIENT_TABLE = new ConcurrentHashMap<>();
+    private HashSet<ClientHandler> CLIENTS = new HashSet<>();
 
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -43,46 +43,59 @@ public class SignalServer implements Runnable {
             System.exit(1);
         }
 
-        new Thread(new SignalServer()).start();
+        SignalServer server = new SignalServer();
+        server.run();
     }
 
     @Override
     public void run() {
         System.out.println("[-] Listening on " + PORT);
-        try (DatagramSocket serverSocket = new DatagramSocket(PORT)) {
-            ConcurrentHashMap<String, InetSocketAddress> clients = new ConcurrentHashMap<>();
-            while (true) {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                serverSocket.receive(packet);
-
-                String msg = new String(packet.getData());
-
-                InetSocketAddress senderAddr = new InetSocketAddress(packet.getAddress(), packet.getPort());
-
-                System.out.println("[-] " + senderAddr + " : " + msg);
-
-                String[] clientArgs = msg.split(" ");
-                if (msg.startsWith("REG")) {
-                    clients.put(clientArgs[1], senderAddr);
-                    System.out.println("[-] REG : " + senderAddr + " -> " + clientArgs[1]);
-                } else if (msg.startsWith("REQ")) {
-                    InetSocketAddress targetAddr = clients.get(clientArgs[1]);
-
-                    if (targetAddr != null) {
-                        String response = "ANS " + targetAddr.getAddress().getHostAddress() + " "
-                                + targetAddr.getPort();
-                        byte[] responseData = response.getBytes();
-                        DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length,
-                                senderAddr);
-                        serverSocket.send(responsePacket);
-                        System.out.println("[-] REQ : " + clientArgs[1] + " -> " + response);
-                    }
-                }
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            while (CLIENTS.size() < MAX_CLIENTS) {
+                Socket client = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(client);
+                CLIENTS.add(clientHandler);
+                new Thread(clientHandler).start();
             }
-
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    class ClientHandler implements Runnable {
+        private Socket socket;
+        private ObjectInputStream in;
+        private ObjectOutputStream out;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+            try {
+                out = new ObjectOutputStream(this.socket.getOutputStream());
+                in = new ObjectInputStream(this.socket.getInputStream());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void run() {
+            try {
+                String[] userTask = ((String) in.readObject()).split(" ");
+                if (userTask[0].equals("REG")) {
+                    String addr = userTask[2].concat(" " + userTask[3]);
+                    CLIENT_TABLE.put(userTask[1], addr);
+                    System.out.println("[-] REG : " + userTask[1] + " <-> " + addr);
+                } else if (userTask[0].equals("REQ")) {
+                    String addr = CLIENT_TABLE.get(userTask[1]);
+                    out.writeObject("ANS " + addr);
+                    out.flush();
+                    System.out.println("[-] REQ : " + userTask[1] + " <-> " + addr);
+                } else {
+                    System.out.println("[!] Invalid option received.");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
