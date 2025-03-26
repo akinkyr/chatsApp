@@ -60,7 +60,7 @@ public class Client {
                 System.out.println("Enter your ID.");
                 String id = scanner.nextLine();
 
-                sendSignal("REG " + id + " " + socket.getInetAddress().toString().substring(1) + " " + PORT, out);
+                sendSignal("REG " + id + " " + PORT, out);
 
                 PeerServer peerServer = new PeerServer(PORT);
                 peerServer.run();

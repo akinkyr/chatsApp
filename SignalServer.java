@@ -81,7 +81,8 @@ public class SignalServer implements Runnable {
             try {
                 String[] userTask = ((String) in.readObject()).split(" ");
                 if (userTask[0].equals("REG")) {
-                    String addr = userTask[2].concat(" " + userTask[3]);
+                    String port = userTask[2];
+                    String addr = socket.getInetAddress().toString().substring(1) + " " + port;
                     CLIENT_TABLE.put(userTask[1], addr);
                     System.out.println("[-] REG : " + userTask[1] + " <-> " + addr);
                 } else if (userTask[0].equals("REQ")) {
