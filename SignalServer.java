@@ -1,5 +1,6 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
@@ -50,7 +51,8 @@ public class SignalServer implements Runnable {
     @Override
     public void run() {
         System.out.println("[-] Listening on " + PORT);
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.bind(new InetSocketAddress("0.0.0.0", PORT));
             while (CLIENTS.size() < MAX_CLIENTS) {
                 Socket client = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(client);
