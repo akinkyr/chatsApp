@@ -60,9 +60,16 @@ public class Client {
                 System.out.println("Enter your ID.");
                 String id = scanner.nextLine();
 
-                sendSignal("REG " + id + " " + PORT, out);
+                sendSignal("REG " + id, out);
+                sendSignal("REQ " + id, out);
 
-                PeerServer peerServer = new PeerServer(PORT);
+                String[] req = ((String) in.readObject()).split(" ");
+
+                sendSignal("END", out);
+                in.close();
+                out.close();
+                socket.close();
+                PeerServer peerServer = new PeerServer(Integer.parseInt(req[2]));
                 peerServer.run();
 
             } else if (choice.equalsIgnoreCase("connect")) {
@@ -77,6 +84,10 @@ public class Client {
                     String peerIp = info[1];
                     int peerPort = Integer.parseInt(info[2]);
 
+                    sendSignal("END", out);
+                    in.close();
+                    out.close();
+                    socket.close();
                     System.out.println("[-] Received Adress : " + peerIp + ":" + peerPort);
                     PeerClient peerClient = new PeerClient(peerIp, peerPort);
                     peerClient.run();

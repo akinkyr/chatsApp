@@ -79,24 +79,39 @@ public class SignalServer implements Runnable {
 
         public void run() {
             try {
-                String[] userTask = ((String) in.readObject()).split(" ");
-                if (userTask[0].equals("REG")) {
-                    String port = userTask[2];
-                    String addr = socket.getInetAddress().toString().substring(1) + " " + port;
-                    CLIENT_TABLE.put(userTask[1], addr);
-                    System.out.println("[-] REG : " + userTask[1] + " <-> " + addr);
-                } else if (userTask[0].equals("REQ")) {
-                    String addr = CLIENT_TABLE.get(userTask[1]);
-                    out.writeObject("ANS " + addr);
-                    out.flush();
-                    System.out.println("[-] REQ : " + userTask[1] + " <-> " + addr);
-                } else {
-                    System.out.println("[!] Invalid option received.");
-                }
+                while (true) {
+                    String user = (String) in.readObject();
+                    if (user.equals("END")) {
+                        end();
+                        break;
+                    }
+                    String[] userTask = user.split(" ");
+                    if (userTask[0].equals("REG")) {
+                        String addr = socket.getInetAddress().getHostAddress() + " " + socket.getPort();
+                        CLIENT_TABLE.put(userTask[1], addr);
+                        System.out.println("[-] REG : " + userTask[1] + " <-> " + addr);
+                    } else if (userTask[0].equals("REQ")) {
+                        String addr = CLIENT_TABLE.get(userTask[1]);
+                        out.writeObject("ANS " + addr);
+                        out.flush();
+                        System.out.println("[-] REQ : " + userTask[1] + " <-> " + addr);
+                    } else {
+                        System.out.println("[!] Invalid option received.");
 
+                    }
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+        }
+
+        public void end() throws Exception {
+            in.close();
+            out.close();
+            CLIENTS.remove(this);
+            socket.close();
+
         }
     }
 }
